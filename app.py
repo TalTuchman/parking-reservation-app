@@ -139,6 +139,13 @@ def release_spot(spot_id):
     conn.close()
     return redirect(url_for("admin"))
 
+@app.route("/lang/<lang_code>")
+def change_language(lang_code):
+    if lang_code in ["el", "en"]:
+        session["lang"] = lang_code
+    return redirect("/")
+
+
 def cleanup_expired_reservations():
     now = datetime.now()
     conn = connect_db()
