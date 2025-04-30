@@ -1,11 +1,81 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Χώρος Στάθμευσης</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>Καλώς ήρθατε στον χώρο στάθμευσης</h1>
-  <p>Αυτή είναι η αρχική σελίδα.</p>
+<body class="bg-blue-50 text-gray-800 p-4">
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-blue-700">Κράτηση Θέσης Στάθμευσης</h1>
+      <button onclick="toggleLang()" class="text-sm text-blue-600 underline">EN / GR</button>
+    </div>
+
+    <div class="mt-4">
+      <img src="{{ url_for('static', filename='lot.png') }}" alt="Parking Layout" class="w-full rounded border">
+    </div>
+
+    <form method="POST" action="/" class="mt-6 space-y-4">
+      <div>
+        <label class="block mb-1 font-semibold">Τύπος Οχήματος</label>
+        <select id="vehicle" name="vehicle" class="w-full border rounded p-2" onchange="updateSpots()">
+          <option value="Scooter">Σκούτερ</option>
+          <option value="Motorcycle">Μοτοσυκλέτα</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block mb-1 font-semibold">Θέση</label>
+        <select id="spot" name="spot" class="w-full border rounded p-2"></select>
+      </div>
+
+      <div>
+        <label class="block mb-1 font-semibold">Τύπος Συνδρομής</label>
+        <select name="duration" class="w-full border rounded p-2">
+          <option value="monthly">Μηνιαία</option>
+          <option value="yearly">Ετήσια</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block mb-1 font-semibold">Όνομα</label>
+        <input type="text" name="name" required class="w-full border rounded p-2">
+      </div>
+
+      <div>
+        <label class="block mb-1 font-semibold">Τηλέφωνο</label>
+        <input type="text" name="phone" required class="w-full border rounded p-2">
+      </div>
+
+      <div>
+        <label class="block mb-1 font-semibold">Αρ. Κυκλοφορίας</label>
+        <input type="text" name="plate" required class="w-full border rounded p-2">
+      </div>
+
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Υποβολή & Πληρωμή</button>
+    </form>
+  </div>
+
+  <script>
+    function updateSpots() {
+      const vehicle = document.getElementById('vehicle').value;
+      const spotSelect = document.getElementById('spot');
+      let range = vehicle === 'Scooter' ? [1, 13] : [14, 71];
+      spotSelect.innerHTML = "";
+      for (let i = range[0]; i <= range[1]; i++) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.innerText = i;
+        spotSelect.appendChild(option);
+      }
+    }
+
+    function toggleLang() {
+      alert("Language toggle will be implemented later.");
+    }
+
+    window.onload = updateSpots;
+  </script>
 </body>
 </html>
