@@ -7,7 +7,7 @@ def connect_db():
     return sqlite3.connect(DB_PATH)
 
 from flask import Flask, render_template, request, redirect, url_for, session
-from flask import Markup  # Optional for injecting HTML snippets
+#from flask import Markup  # Optional for injecting HTML snippets
 from datetime import datetime
 import os
 
