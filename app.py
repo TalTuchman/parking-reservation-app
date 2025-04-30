@@ -71,5 +71,34 @@ def home():
 
     return render_template("index.html")
 
+from flask import redirect, url_for
+
+@app.route("/admin")
+def admin():
+    conn = connect_db()
+    c = conn.cursor()
+
+    # Get all reservations (ordered: newest first)
+    c.execute('''
+        SELECT users.id, name, phone, plate, vehicle, spot, duration, 
+               submitted_at, confirmed, confirmed_at, release_at
+        FROM users
+        ORDER BY submitted_at DESC
+    ''')
+    reservations = c.fetchall()
+
+    # Get all spots
+    c.execute('''
+        SELECT id, status, assigned_to, release_at
+        FROM spots
+        ORDER BY id ASC
+    ''')
+    spots = c.fetchall()
+
+    conn.close()
+
+    return render_template("admin.html", reservations=reservations, spots=spots)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
