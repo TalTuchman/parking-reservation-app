@@ -7,8 +7,6 @@ def connect_db():
     return sqlite3.connect(DB_PATH)
 
 
-
-
 from flask import Flask, render_template, request, redirect
 from datetime import datetime
 import os
@@ -98,6 +96,47 @@ def admin():
     conn.close()
 
     return render_template("admin.html", reservations=reservations, spots=spots)
+
+@app.route("/confirm/<int:user_id>", methods=["POST"])
+def confirm_payment(user_id):
+    conn = connect_db()
+    c = conn.cursor()
+
+    # Get user's subscription duration and spot
+    c.execute("SELECT duration, spot FROM users WHERE id = ?", (user_id,))
+    row = c.fetchone()
+
+    if row:
+        duration, spot = row
+        now = datetime.now()
+        release_at = now + timedelta(days=30 if duration == "monthly" else 365)
+
+        # Update user
+        c.execute("UPDATE users SET confirmed = 1, confirmed_at = ?, release_at = ? WHERE id = ?", 
+                  (now, release_at, user_id))
+
+        # Update spot
+        c.execute("UPDATE spots SET status = 'occupied', release_at = ? WHERE id = ?", 
+                  (release_at, spot))
+
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin"))
+
+@app.route("/release/<int:spot_id>", methods=["POST"])
+def release_spot(spot_id):
+    conn = connect_db()
+    c = conn.cursor()
+
+    # Free the spot
+    c.execute("UPDATE spots SET status = 'available', assigned_to = NULL, reserved_at = NULL, release_at = NULL WHERE id = ?", (spot_id,))
+
+    # Optionally update users table (not mandatory unless you want to show it)
+    c.execute("UPDATE users SET release_at = datetime('now') WHERE spot = ? AND confirmed = 1", (spot_id,))
+
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin"))
 
 
 if __name__ == '__main__':

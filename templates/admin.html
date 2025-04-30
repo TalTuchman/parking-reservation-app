@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-blue-700">Πίνακας Διαχείρισης</h1>
+
+    <h2 class="text-xl font-semibold text-gray-800 mb-2">Κρατήσεις</h2>
+    <table class="w-full bg-white shadow rounded mb-6">
+      <thead>
+        <tr class="bg-blue-100 text-left">
+          <th class="p-2">Όνομα</th>
+          <th class="p-2">Όχημα</th>
+          <th class="p-2">Θέση</th>
+          <th class="p-2">Τηλ.</th>
+          <th class="p-2">Πινακίδα</th>
+          <th class="p-2">Υποβλήθηκε</th>
+          <th class="p-2">Επιβεβαίωση</th>
+          <th class="p-2">Λήξη</th>
+          <th class="p-2">Ενέργεια</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in reservations %}
+        <tr class="border-t">
+          <td class="p-2">{{ user[1] }}</td>
+          <td class="p-2">{{ user[4] }}</td>
+          <td class="p-2">{{ user[5] }}</td>
+          <td class="p-2">{{ user[2] }}</td>
+          <td class="p-2">{{ user[3] }}</td>
+          <td class="p-2">{{ user[7] }}</td>
+          <td class="p-2">
+            {% if user[8] %}
+              ✅ {{ user[9] }}
+            {% else %}
+              ❌
+              <form method="POST" action="/confirm/{{ user[0] }}">
+                <button class="text-blue-600 underline">Επιβεβαίωση</button>
+              </form>
+            {% endif %}
+          </td>
+          <td class="p-2">{{ user[10] }}</td>
+          <td class="p-2">
+            <form method="POST" action="/release/{{ user[5] }}">
+              <button class="text-red-600 underline">Απελευθέρωση</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2 class="text-xl font-semibold text-gray-800 mb-2">Κατάσταση Θέσεων</h2>
+    <div class="grid grid-cols-6 gap-2">
+      {% for s in spots %}
+        <div class="bg-white p-2 rounded shadow text-sm">
+          <strong>#{{ s[0] }}</strong><br>
+          {{ s[1] }}<br>
+          {{ s[2] or '' }}<br>
+          {{ s[3] or '' }}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>
