@@ -26,7 +26,7 @@ PAYPAL_LINKS = {
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
-        # Extract form data
+    # 1. Extract form data
         vehicle = request.form["vehicle"]
         spot = int(request.form["spot"])
         duration = request.form["duration"]
@@ -34,15 +34,31 @@ def home():
         phone = request.form["phone"].strip()
         plate = request.form["plate"].strip()
 
-        # Validate (simple server-side check)
+    # 2. Validate required fields
         if not (name and phone and plate):
             return "Missing required fields", 400
 
-        # Log or later: save to DB
-        print("NEW RESERVATION:")
-        print(vehicle, spot, duration, name, phone, plate)
+    # 3. Connect to the database
+        conn = connect_db()
+        c = conn.cursor()
 
-        # Get PayPal URL
+        now = datetime.now()
+        release = now + timedelta(hours=24)
+
+    # 4. Update spot as temporarily reserved
+        c.execute("UPDATE spots SET status = 'reserved', assigned_to = ?, reserved_at = ?, release_at = ? WHERE id = ?", 
+                    (name, now, release, spot))
+
+    # 5. Save user reservation
+        c.execute('''INSERT INTO users 
+            (name, phone, plate, vehicle, spot, duration, submitted_at, release_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+            (name, phone, plate, vehicle, spot, duration, now, release))
+
+        conn.commit()
+        conn.close()
+
+    # 6. Redirect to the correct PayPal link
         key = (vehicle, duration)
         paypal_url = PAYPAL_LINKS.get(key)
 
@@ -50,6 +66,8 @@ def home():
             return "Invalid selection", 400
 
         return redirect(paypal_url)
+
+        
 
     return render_template("index.html")
 
