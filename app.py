@@ -6,11 +6,13 @@ DB_PATH = "db/parking.db"
 def connect_db():
     return sqlite3.connect(DB_PATH)
 
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Markup  # Optional for injecting HTML snippets
 from datetime import datetime
 import os
 
 app = Flask(__name__)
+app.secret_key = "mysecretkey"  # Needed for sessions
 
 # Payment links
 PAYPAL_LINKS = {
@@ -67,8 +69,6 @@ def home():
         
 
     return render_template("index.html")
-
-from flask import redirect, url_for
 
 @app.route("/admin")
 def admin():
