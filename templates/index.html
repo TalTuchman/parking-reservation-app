@@ -1,67 +1,81 @@
 <!DOCTYPE html>
-<html lang="el">
+<html lang="{{ lang }}">
 <head>
   <meta charset="UTF-8">
-  <title>Χώρος Στάθμευσης</title>
+  <title>{% if lang == 'en' %}Parking Spot Reservation{% else %}Κράτηση Θέσης Στάθμευσης{% endif %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-blue-50 text-gray-800 p-4">
   <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <!-- Header with Language Toggle -->
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-blue-700">Κράτηση Θέσης Στάθμευσης</h1>
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-blue-700">
-          {% if lang == 'en' %} Parking Spot Reservation {% else %} Κράτηση Θέσης Στάθμευσης {% endif %}
-        </h1>
-        <div class="text-sm">
-          <a href="/lang/el" class="text-blue-600 underline mr-2">GR</a>
-          <a href="/lang/en" class="text-blue-600 underline">EN</a>
-        </div>
-      </div>      
+      <h1 class="text-2xl font-bold text-blue-700">
+        {% if lang == 'en' %}Parking Spot Reservation{% else %}Κράτηση Θέσης Στάθμευσης{% endif %}
+      </h1>
+      <div class="text-sm">
+        <a href="/lang/el" class="text-blue-600 underline mr-2">GR</a>
+        <a href="/lang/en" class="text-blue-600 underline">EN</a>
+      </div>
     </div>
 
+    <!-- Image -->
     <div class="mt-4">
       <img src="{{ url_for('static', filename='lot.png') }}" alt="Parking Layout" class="w-full rounded border">
     </div>
 
+    <!-- Reservation Form -->
     <form method="POST" action="/" class="mt-6 space-y-4">
       <div>
-        <label class="block mb-1 font-semibold">Τύπος Οχήματος</label>
+        <label class="block mb-1 font-semibold">
+          {% if lang == 'en' %}Vehicle Type{% else %}Τύπος Οχήματος{% endif %}
+        </label>
         <select id="vehicle" name="vehicle" class="w-full border rounded p-2" onchange="updateSpots()">
-          <option value="Scooter">Σκούτερ</option>
-          <option value="Motorcycle">Μοτοσυκλέτα</option>
+          <option value="Scooter">{% if lang == 'en' %}Scooter{% else %}Σκούτερ{% endif %}</option>
+          <option value="Motorcycle">{% if lang == 'en' %}Motorcycle{% else %}Μοτοσυκλέτα{% endif %}</option>
         </select>
       </div>
 
       <div>
-        <label class="block mb-1 font-semibold">Θέση</label>
+        <label class="block mb-1 font-semibold">
+          {% if lang == 'en' %}Desired Spot{% else %}Θέση{% endif %}
+        </label>
         <select id="spot" name="spot" class="w-full border rounded p-2"></select>
       </div>
 
       <div>
-        <label class="block mb-1 font-semibold">Τύπος Συνδρομής</label>
+        <label class="block mb-1 font-semibold">
+          {% if lang == 'en' %}Subscription Type{% else %}Τύπος Συνδρομής{% endif %}
+        </label>
         <select name="duration" class="w-full border rounded p-2">
-          <option value="monthly">Μηνιαία</option>
-          <option value="yearly">Ετήσια</option>
+          <option value="monthly">{% if lang == 'en' %}Monthly{% else %}Μηνιαία{% endif %}</option>
+          <option value="yearly">{% if lang == 'en' %}Yearly{% else %}Ετήσια{% endif %}</option>
         </select>
       </div>
 
       <div>
-        <label class="block mb-1 font-semibold">Όνομα</label>
+        <label class="block mb-1 font-semibold">
+          {% if lang == 'en' %}Name{% else %}Όνομα{% endif %}
+        </label>
         <input type="text" name="name" required class="w-full border rounded p-2">
       </div>
 
       <div>
-        <label class="block mb-1 font-semibold">Τηλέφωνο</label>
+        <label class="block mb-1 font-semibold">
+          {% if lang == 'en' %}Phone{% else %}Τηλέφωνο{% endif %}
+        </label>
         <input type="text" name="phone" required class="w-full border rounded p-2">
       </div>
 
       <div>
-        <label class="block mb-1 font-semibold">Αρ. Κυκλοφορίας</label>
+        <label class="block mb-1 font-semibold">
+          {% if lang == 'en' %}License Plate{% else %}Αρ. Κυκλοφορίας{% endif %}
+        </label>
         <input type="text" name="plate" required class="w-full border rounded p-2">
       </div>
 
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Υποβολή & Πληρωμή</button>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">
+        {% if lang == 'en' %}Confirm & Pay{% else %}Υποβολή & Πληρωμή{% endif %}
+      </button>
     </form>
   </div>
 
@@ -78,11 +92,6 @@
         spotSelect.appendChild(option);
       }
     }
-
-    function toggleLang() {
-      alert("Language toggle will be implemented later.");
-    }
-
     window.onload = updateSpots;
   </script>
 </body>
