@@ -137,6 +137,27 @@ def release_spot(spot_id):
     conn.close()
     return redirect(url_for("admin"))
 
+def cleanup_expired_reservations():
+    now = datetime.now()
+    conn = connect_db()
+    c = conn.cursor()
+
+    # Find expired, unconfirmed reservations
+    c.execute('''
+        SELECT u.id, u.spot FROM users u
+        JOIN spots s ON u.spot = s.id
+        WHERE u.confirmed = 0 AND u.release_at <= ?
+    ''', (now,))
+    expired = c.fetchall()
+
+    for user_id, spot_id in expired:
+        # Clear user and free spot
+        c.execute("UPDATE spots SET status = 'available', assigned_to = NULL, reserved_at = NULL, release_at = NULL WHERE id = ?", (spot_id,))
+        c.execute("DELETE FROM users WHERE id = ?", (user_id,))
+
+    conn.commit()
+    conn.close()
+
 
 if __name__ == '__main__':
     app.run(debug=True)
