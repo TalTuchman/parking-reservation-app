@@ -1,3 +1,14 @@
+import sqlite3
+from datetime import datetime, timedelta
+
+DB_PATH = "db/parking.db"
+
+def connect_db():
+    return sqlite3.connect(DB_PATH)
+
+
+
+
 from flask import Flask, render_template, request, redirect
 from datetime import datetime
 import os
