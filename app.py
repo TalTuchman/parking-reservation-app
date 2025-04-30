@@ -67,8 +67,8 @@ def home():
         return redirect(paypal_url)
 
         
-
-    return render_template("index.html")
+    lang = session.get("lang", "el")
+    return render_template("index.html", lang=lang)
 
 @app.route("/admin")
 def admin():
