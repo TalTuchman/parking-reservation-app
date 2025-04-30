@@ -72,6 +72,8 @@ from flask import redirect, url_for
 
 @app.route("/admin")
 def admin():
+    cleanup_expired_reservations()  # auto-release expired holds
+    
     conn = connect_db()
     c = conn.cursor()
 
