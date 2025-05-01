@@ -210,7 +210,20 @@ def release_spot(spot_id):
     c = conn.cursor()
 
     # Free the spot
-    c.execute("UPDATE spots SET status = 'available', assigned_to = NULL, reserved_at = NULL, release_at = NULL WHERE id = ?", (spot_id,))
+    c.execute("""
+        UPDATE spots 
+        SET status = 'available', 
+            assigned_to = NULL, 
+            reserved_at = NULL, 
+            release_at = NULL 
+        WHERE id = ?
+    """, (spot_id,))
+    
+    # 2. Delete or deactivate the user who reserved it
+    c.execute("""
+        DELETE FROM users 
+        WHERE spot = ? AND confirmed = 1
+    """, (spot_id,))
 
     # Optionally update users table (not mandatory unless you want to show it)
     c.execute("UPDATE users SET release_at = datetime('now') WHERE spot = ? AND confirmed = 1", (spot_id,))
