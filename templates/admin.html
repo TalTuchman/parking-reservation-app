@@ -65,6 +65,37 @@
         </div>
       {% endfor %}
     </div>
+    <h2 class="text-xl font-semibold mt-8 mb-2 text-gray-800">📊 Analytics</h2>
+    <div class="bg-white p-4 rounded shadow mb-6">
+      <p><strong>Διαθέσιμες Θέσεις:</strong> {{ available_spots }}</p>
+      <p><strong>Κατειλημμένες Θέσεις:</strong> {{ occupied_spots }}</p>
+      <p><strong>Συνολικά Έσοδα:</strong> €{{ total_income }}</p>
+
+      <h3 class="mt-4 font-semibold text-gray-700">Έσοδα ανά Μήνα</h3>
+      <ul class="list-disc ml-5">
+        {% for row in monthly_income %}
+          <li>{{ row[0] }} → €{{ row[1] }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow mb-6">
+      <h3 class="font-semibold text-gray-700 mb-2">Έσοδα ανά Χρήστη</h3>
+      <ul class="list-disc ml-5">
+        {% for row in user_income %}
+          <li>{{ row[0] }} ({{ row[1] }}) → €{{ row[2] }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow mb-6">
+      <h3 class="font-semibold text-gray-700 mb-2">Έσοδα ανά Θέση</h3>
+      <ul class="list-disc ml-5">
+        {% for row in spot_income %}
+          <li>Θέση #{{ row[0] }} → €{{ row[1] }}</li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
 </body>
 </html>
