@@ -74,12 +74,14 @@ def home():
 
 @app.route("/admin")
 def admin():
-    cleanup_expired_reservations()  # auto-release expired holds
-    
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("login"))
+
+    cleanup_expired_reservations()
+
     conn = connect_db()
     c = conn.cursor()
 
-    # Get all reservations (ordered: newest first)
     c.execute('''
         SELECT users.id, name, phone, plate, vehicle, spot, duration, 
                submitted_at, confirmed, confirmed_at, release_at
@@ -88,7 +90,6 @@ def admin():
     ''')
     reservations = c.fetchall()
 
-    # Get all spots
     c.execute('''
         SELECT id, status, assigned_to, release_at
         FROM spots
@@ -97,8 +98,8 @@ def admin():
     spots = c.fetchall()
 
     conn.close()
-
     return render_template("admin.html", reservations=reservations, spots=spots)
+
 
 @app.route("/confirm/<int:user_id>", methods=["POST"])
 def confirm_payment(user_id):
@@ -146,6 +147,28 @@ def change_language(lang_code):
     if lang_code in ["el", "en"]:
         session["lang"] = lang_code
     return redirect("/")
+
+from flask import flash
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        if username == os.getenv("ADMIN_USERNAME") and password == os.getenv("ADMIN_PASSWORD"):
+            session["admin_logged_in"] = True
+            return redirect(url_for("admin"))
+        else:
+            flash("Invalid credentials", "error")
+            return redirect(url_for("login"))
+
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("admin_logged_in", None)
+    return redirect(url_for("login"))
 
 
 def cleanup_expired_reservations():
