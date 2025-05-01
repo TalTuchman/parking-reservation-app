@@ -97,8 +97,85 @@ def admin():
     ''')
     spots = c.fetchall()
 
+    # Spot usage
+    c.execute("SELECT COUNT(*) FROM spots WHERE status = 'available'")
+    available_spots = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM spots WHERE status = 'occupied'")
+    occupied_spots = c.fetchone()[0]
+
+    # Total income
+    c.execute("""
+        SELECT SUM(CASE 
+            WHEN duration = 'monthly' AND vehicle = 'Scooter' THEN 30
+            WHEN duration = 'yearly' AND vehicle = 'Scooter' THEN 324
+            WHEN duration = 'monthly' AND vehicle = 'Motorcycle' THEN 40
+            WHEN duration = 'yearly' AND vehicle = 'Motorcycle' THEN 432
+            ELSE 0 END)
+        FROM users
+        WHERE confirmed = 1
+    """)
+    total_income = c.fetchone()[0] or 0
+
+    # Income per month
+    c.execute("""
+        SELECT strftime('%Y-%m', confirmed_at) AS month,
+            SUM(CASE 
+                WHEN duration = 'monthly' AND vehicle = 'Scooter' THEN 30
+                WHEN duration = 'yearly' AND vehicle = 'Scooter' THEN 324
+                WHEN duration = 'monthly' AND vehicle = 'Motorcycle' THEN 40
+                WHEN duration = 'yearly' AND vehicle = 'Motorcycle' THEN 432
+                ELSE 0 END)
+        FROM users
+        WHERE confirmed = 1
+        GROUP BY month
+        ORDER BY month DESC
+    """)
+    monthly_income = c.fetchall()
+
+    c.execute("""
+        SELECT name, phone,
+            SUM(CASE 
+                WHEN duration = 'monthly' AND vehicle = 'Scooter' THEN 30
+                WHEN duration = 'yearly' AND vehicle = 'Scooter' THEN 324
+                WHEN duration = 'monthly' AND vehicle = 'Motorcycle' THEN 40
+                WHEN duration = 'yearly' AND vehicle = 'Motorcycle' THEN 432
+                ELSE 0 END) AS income
+        FROM users
+        WHERE confirmed = 1
+        GROUP BY name, phone
+        ORDER BY income DESC
+    """)
+    user_income = c.fetchall()
+
+    c.execute("""
+        SELECT spot,
+            SUM(CASE 
+                WHEN duration = 'monthly' AND vehicle = 'Scooter' THEN 30
+                WHEN duration = 'yearly' AND vehicle = 'Scooter' THEN 324
+                WHEN duration = 'monthly' AND vehicle = 'Motorcycle' THEN 40
+                WHEN duration = 'yearly' AND vehicle = 'Motorcycle' THEN 432
+                ELSE 0 END) AS income
+        FROM users
+        WHERE confirmed = 1
+        GROUP BY spot
+        ORDER BY spot ASC
+    """)
+    spot_income = c.fetchall()
+
+
     conn.close()
-    return render_template("admin.html", reservations=reservations, spots=spots)
+
+    return render_template("admin.html", 
+        reservations=reservations,
+        spots=spots,
+        available_spots=available_spots,
+        occupied_spots=occupied_spots,
+        total_income=total_income,
+        monthly_income=monthly_income,
+        user_income=user_income,
+        spot_income=spot_income
+    )
 
 
 @app.route("/confirm/<int:user_id>", methods=["POST"])
