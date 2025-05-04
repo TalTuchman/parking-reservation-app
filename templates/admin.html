@@ -54,7 +54,10 @@
             {% if user[11] == 1 %}
               ✅
             {% else %}
-              ❌
+              <form method="POST" action="/set-gate-access/{{ user[0] }}">
+                <input type="number" name="slot" min="1" max="200" required class="w-16 px-1 py-0.5 border rounded text-sm" placeholder="Slot">
+                <button class="ml-2 text-green-600 underline text-sm">✔ Add</button>
+          </form>
             {% endif %}
           </td>
           <td class="p-2">{{ user[12] or '' }}</td>            
@@ -63,7 +66,6 @@
         {% endfor %}
       </tbody>
     </table>
-
     <h2 class="text-xl font-semibold text-gray-800 mb-2">Κατάσταση Θέσεων</h2>
     <div class="grid grid-cols-6 gap-2">
       {% for s in spots %}
