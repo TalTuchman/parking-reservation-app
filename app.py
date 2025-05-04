@@ -89,8 +89,6 @@ def admin():
     FROM users
     ORDER BY submitted_at DESC
     ''')
-
-    ''')
     reservations = c.fetchall()
 
     c.execute('''
