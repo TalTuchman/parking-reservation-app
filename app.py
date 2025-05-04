@@ -178,6 +178,23 @@ def admin():
         spot_income=spot_income
     )
 
+@app.route("/set-gate-access/<int:user_id>", methods=["POST"])
+def set_gate_access(user_id):
+    slot = request.form.get("slot")
+    
+    try:
+        slot = int(slot)
+        if not (1 <= slot <= 200):
+            raise ValueError("Invalid slot number")
+    except:
+        return "Invalid slot", 400
+
+    conn = connect_db()
+    c = conn.cursor()
+    c.execute("UPDATE users SET gate_added = 1, gate_slot = ? WHERE id = ?", (slot, user_id))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin"))
 
 @app.route("/confirm/<int:user_id>", methods=["POST"])
 def confirm_payment(user_id):
