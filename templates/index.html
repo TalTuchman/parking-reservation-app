@@ -83,7 +83,7 @@
     function updateSpots() {
       const vehicle = document.getElementById('vehicle').value;
       const spotSelect = document.getElementById('spot');
-      let range = vehicle === 'Scooter' ? [1, 13] : [14, 71];
+      let range = vehicle === 'Scooter' ? [1, 18] : [19, 60];
       spotSelect.innerHTML = "";
       for (let i = range[0]; i <= range[1]; i++) {
         const option = document.createElement("option");
