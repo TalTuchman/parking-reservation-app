@@ -94,7 +94,7 @@ def admin():
     reservations = c.fetchall()
 
     c.execute('''
-        SELECT id, status, assigned_to, release_at
+    SELECT id, status, assigned_to, release_at
         FROM spots
         ORDER BY id ASC
     ''')
