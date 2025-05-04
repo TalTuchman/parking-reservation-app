@@ -82,11 +82,14 @@ def admin():
     conn = connect_db()
     c = conn.cursor()
 
-    c.execute('''
-        SELECT users.id, name, phone, plate, vehicle, spot, duration, 
-               submitted_at, confirmed, confirmed_at, release_at
-        FROM users
-        ORDER BY submitted_at DESC
+    c.executec.execute('''
+    SELECT users.id, name, phone, plate, vehicle, spot, duration, 
+           submitted_at, confirmed, confirmed_at, release_at,
+           gate_added, gate_slot
+    FROM users
+    ORDER BY submitted_at DESC
+    ''')
+
     ''')
     reservations = c.fetchall()
 
