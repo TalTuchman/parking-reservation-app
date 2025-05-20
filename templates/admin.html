@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Admin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -9,74 +9,89 @@
   <div class="max-w-6xl mx-auto">
     <h1 class="text-3xl font-bold mb-6 text-blue-700">Πίνακας Διαχείρισης</h1>
 
+    <!-- ───── Reservations Table ───── -->
     <h2 class="text-xl font-semibold text-gray-800 mb-2">Κρατήσεις</h2>
-    <table class="w-full bg-white shadow rounded mb-6">
+    <table class="w-full bg-white shadow rounded mb-6 text-sm">
       <thead>
         <tr class="bg-blue-100 text-left">
           <th class="p-2">Όνομα</th>
-          <th class="p-2">Όχημα</th>
+          <th class="p-2">Μέγεθος</th>
           <th class="p-2">Θέση</th>
           <th class="p-2">Τηλ.</th>
           <th class="p-2">Πινακίδα</th>
           <th class="p-2">Υποβλήθηκε</th>
           <th class="p-2">Επιβεβαίωση</th>
           <th class="p-2">Λήξη</th>
-          <th class="p-2">Ενέργεια</th>
+          <th class="p-2">Απελευθέρωση</th>
           <th class="p-2">Gate Added</th>
           <th class="p-2">Slot #</th>
         </tr>
       </thead>
+
       <tbody>
-        {% for user in reservations %}
+        {% for u in reservations %}
         <tr class="border-t">
-          <td class="p-2">{{ user[1] }}</td>
-          <td class="p-2">{{ user[4] }}</td>
-          <td class="p-2">{{ user[5] }}</td>
-          <td class="p-2">{{ user[2] }}</td>
-          <td class="p-2">{{ user[3] }}</td>
-          <td class="p-2">{{ user[7] }}</td>
+          <td class="p-2">{{ u[1] }}</td>         <!-- name -->
+          <td class="p-2">{{ u[4] }}</td>         <!-- size small/medium/large -->
+          <td class="p-2">{{ u[5] }}</td>         <!-- spot id -->
+          <td class="p-2">{{ u[2] }}</td>         <!-- phone -->
+          <td class="p-2">{{ u[3] }}</td>         <!-- plate -->
+          <td class="p-2">{{ u[7] }}</td>         <!-- submitted -->
+          
+          <!-- confirmed? -->
           <td class="p-2">
-            {% if user[8] %}
-              ✅ {{ user[9] }}
+            {% if u[8] %}
+              ✅ {{ u[9] }}
             {% else %}
               ❌
-              <form method="POST" action="/confirm/{{ user[0] }}">
+              <form method="POST" action="/confirm/{{ u[0] }}">
                 <button class="text-blue-600 underline">Επιβεβαίωση</button>
               </form>
             {% endif %}
           </td>
-          <td class="p-2">{{ user[10] }}</td>
+
+          <td class="p-2">{{ u[10] }}</td>        <!-- release_at -->
+
+          <!-- release spot -->
           <td class="p-2">
-            <form method="POST" action="/release/{{ user[5] }}">
+            <form method="POST" action="/release/{{ u[5] }}">
               <button class="text-red-600 underline">Απελευθέρωση</button>
             </form>
+          </td>
+
+          <!-- gate added? -->
           <td class="p-2">
-            {% if user[11] == 1 %}
+            {% if u[11] == 1 %}
               ✅
             {% else %}
-              <form method="POST" action="/set-gate-access/{{ user[0] }}">
-                <input type="number" name="slot" min="1" max="200" required class="w-16 px-1 py-0.5 border rounded text-sm" placeholder="Slot">
-                <button class="ml-2 text-green-600 underline text-sm">✔ Add</button>
-          </form>
+              <form method="POST" action="/set-gate-access/{{ u[0] }}" class="flex items-center space-x-1">
+                <input type="number" name="slot" min="1" max="200" required
+                       class="w-16 px-1 py-0.5 border rounded text-xs" placeholder="Slot" />
+                <button class="text-green-600 underline text-xs">✔ Add</button>
+              </form>
             {% endif %}
           </td>
-          <td class="p-2">{{ user[12] or '' }}</td>            
-          </td>
+
+          <td class="p-2">{{ u[12] or '' }}</td>  <!-- gate_slot -->
         </tr>
         {% endfor %}
       </tbody>
     </table>
+
+    <!-- ───── Spot Status Grid ───── -->
     <h2 class="text-xl font-semibold text-gray-800 mb-2">Κατάσταση Θέσεων</h2>
     <div class="grid grid-cols-6 gap-2">
       {% for s in spots %}
-        <div class="bg-white p-2 rounded shadow text-sm">
-          <strong>#{{ s[0] }}</strong><br>
-          {{ s[1] }}<br>
-          {{ s[2] or '' }}<br>
-          {{ s[3] or '' }}
-        </div>
+      <div class="bg-white p-2 rounded shadow text-xs">
+        <strong>#{{ s[0] }}</strong><br />
+        {{ s[1] }}<br />
+        {{ s[2] or '' }}<br />
+        {{ s[3] or '' }}
+      </div>
       {% endfor %}
     </div>
+
+    <!-- ───── Analytics ───── -->
     <h2 class="text-xl font-semibold mt-8 mb-2 text-gray-800">📊 Analytics</h2>
     <div class="bg-white p-4 rounded shadow mb-6">
       <p><strong>Διαθέσιμες Θέσεις:</strong> {{ available_spots }}</p>
