@@ -147,6 +147,13 @@ def admin():
         total_income=total_income, monthly_income=monthly_income,
         user_income=user_income, spot_income=spot_income)
 
+@app.route("/lang/<lang_code>")
+def change_language(lang_code):
+    # accept only el / en
+    if lang_code in ("el", "en"):
+        session["lang"] = lang_code
+    return redirect("/")
+
 # ------------- existing gate access, payment confirmation, release,
 #                language toggle, login/logout, cleanup keep unchanged --------------
 
