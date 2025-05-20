@@ -168,6 +168,54 @@ def change_language(lang_code):
         session["lang"] = lang_code
     return redirect("/")
 
+def cleanup_expired_reservations():
+    """
+    • Any un-confirmed reservation older than 24 h → delete user & free spot
+    • Any confirmed reservation whose release_at datetime is in the past
+      → free the spot and mark the user released
+    """
+    now = datetime.now()
+    conn = connect_db()
+    c = conn.cursor()
+
+    # un-confirmed, expired holds
+    c.execute("""
+        SELECT u.id, u.spot
+        FROM users u
+        JOIN spots s ON u.spot = s.id
+        WHERE u.confirmed = 0
+          AND u.release_at <= ?
+    """, (now,))
+    for user_id, spot_id in c.fetchall():
+        c.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        c.execute("""
+            UPDATE spots
+            SET status = 'available',
+                assigned_to = NULL,
+                reserved_at = NULL,
+                release_at = NULL
+            WHERE id = ?
+        """, (spot_id,))
+
+    # confirmed but past their release date
+    c.execute("""
+        SELECT spot
+        FROM spots
+        WHERE status = 'occupied' AND release_at <= ?
+    """, (now,))
+    for (spot_id,) in c.fetchall():
+        c.execute("""
+            UPDATE spots
+            SET status = 'available',
+                assigned_to = NULL,
+                reserved_at = NULL,
+                release_at = NULL
+            WHERE id = ?
+        """, (spot_id,))
+
+    conn.commit()
+    conn.close()
+
 # ------------- existing gate access, payment confirmation, release,
 #                language toggle, login/logout, cleanup keep unchanged --------------
 
