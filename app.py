@@ -110,6 +110,20 @@ def price_sql_case(prefix=""):
             ELSE 0 END {prefix}
     """
 
+from flask import flash   # already imported earlier
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        if username == os.getenv("ADMIN_USERNAME") and password == os.getenv("ADMIN_PASSWORD"):
+            session["admin_logged_in"] = True
+            return redirect(url_for("admin"))
+        flash("Invalid credentials", "error")
+        return redirect(url_for("login"))
+    return render_template("login.html")
+
 @app.route("/admin")
 def admin():
     if not session.get("admin_logged_in"): return redirect(url_for("login"))
