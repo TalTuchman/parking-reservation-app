@@ -173,65 +173,42 @@ def admin():
     c.execute("SELECT COUNT(*) FROM spots WHERE status = 'occupied'")
     occupied_spots = c.fetchone()[0]
 
-    # Total income
-    c.execute("""
-        SELECT SUM(CASE 
-            WHEN duration = 'monthly' AND vehicle = 'Scooter' THEN 30
-            WHEN duration = 'yearly' AND vehicle = 'Scooter' THEN 324
-            WHEN duration = 'monthly' AND vehicle = 'Motorcycle' THEN 40
-            WHEN duration = 'yearly' AND vehicle = 'Motorcycle' THEN 432
-            ELSE 0 END)
-        FROM users
-        WHERE confirmed = 1
-    """)
+    # Total income across all confirmed users
+    c.execute(f"SELECT SUM({price_sql_case()}) FROM users WHERE confirmed = 1")
     total_income = c.fetchone()[0] or 0
 
     # Income per month
-    c.execute("""
+    c.execute(f"""
         SELECT strftime('%Y-%m', confirmed_at) AS month,
-            SUM(CASE 
-                WHEN duration = 'monthly' AND vehicle = 'Scooter' THEN 30
-                WHEN duration = 'yearly' AND vehicle = 'Scooter' THEN 324
-                WHEN duration = 'monthly' AND vehicle = 'Motorcycle' THEN 40
-                WHEN duration = 'yearly' AND vehicle = 'Motorcycle' THEN 432
-                ELSE 0 END)
+            SUM({price_sql_case()})
         FROM users
         WHERE confirmed = 1
-        GROUP BY month
-        ORDER BY month DESC
+    GROUP BY month
+    ORDER BY month DESC
     """)
     monthly_income = c.fetchall()
 
-    c.execute("""
+    # Income per user
+    c.execute(f"""
         SELECT name, phone,
-            SUM(CASE 
-                WHEN duration = 'monthly' AND vehicle = 'Scooter' THEN 30
-                WHEN duration = 'yearly' AND vehicle = 'Scooter' THEN 324
-                WHEN duration = 'monthly' AND vehicle = 'Motorcycle' THEN 40
-                WHEN duration = 'yearly' AND vehicle = 'Motorcycle' THEN 432
-                ELSE 0 END) AS income
+            SUM({price_sql_case()}) AS income
         FROM users
         WHERE confirmed = 1
-        GROUP BY name, phone
-        ORDER BY income DESC
+    GROUP BY name, phone
+    ORDER BY income DESC
     """)
     user_income = c.fetchall()
 
-    c.execute("""
+    # Income per spot
+    c.execute(f"""
         SELECT spot,
-            SUM(CASE 
-                WHEN duration = 'monthly' AND vehicle = 'Scooter' THEN 30
-                WHEN duration = 'yearly' AND vehicle = 'Scooter' THEN 324
-                WHEN duration = 'monthly' AND vehicle = 'Motorcycle' THEN 40
-                WHEN duration = 'yearly' AND vehicle = 'Motorcycle' THEN 432
-                ELSE 0 END) AS income
+            SUM({price_sql_case()}) AS income
         FROM users
         WHERE confirmed = 1
-        GROUP BY spot
-        ORDER BY spot ASC
+    GROUP BY spot
+    ORDER BY spot
     """)
     spot_income = c.fetchall()
-
 
     conn.close()
 
