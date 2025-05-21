@@ -16,61 +16,98 @@ import os
 app = Flask(__name__)
 app.secret_key = "mysecretkey"  # Needed for sessions
 
-# Payment links
-PAYPAL_LINKS = {
-    ("Scooter", "monthly"): "https://www.paypal.com/ncp/payment/Z36BVWDZMMR76",
-    ("Scooter", "yearly"): "https://www.paypal.com/ncp/payment/P9NECY7EPU8NC",
-    ("Motorcycle", "monthly"): "https://www.paypal.com/ncp/payment/W57XB9B4SM4UA",
-    ("Motorcycle", "yearly"): "https://www.paypal.com/ncp/payment/9CQPHZP79DAQ4"
+PRICES = {
+    ("small","monthly"): 35,  ("small","yearly"): 378,
+    ("medium","monthly"):45,  ("medium","yearly"):486,
+    ("large","monthly"): 50,  ("large","yearly"): 540,
 }
+
+PAYPAL_LINKS = {  # placeholders – fill real URLs later
+    ("small","monthly") :"https://paypal.small.monthly",
+    ("small","yearly")  :"https://paypal.small.yearly",
+    ("medium","monthly"):"https://paypal.medium.monthly",
+    ("medium","yearly") :"https://paypal.medium.yearly",
+    ("large","monthly") :"https://paypal.large.monthly",
+    ("large","yearly")  :"https://paypal.large.yearly",
+}
+
+SPOT_POOLS = {
+    "small" : [f"S{i}" for i in range(1,5)],
+    "medium": [f"M{i}" for i in range(1,20)],
+    "large" : [f"B{i}" for i in range(1,24)],
+}
+
 
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
     # 1. Extract form data
-        vehicle = request.form["vehicle"]
-        spot = int(request.form["spot"])
-        duration = request.form["duration"]
-        name = request.form["name"].strip()
-        phone = request.form["phone"].strip()
-        plate = request.form["plate"].strip()
+        size     = request.form["size"]           # "small", "medium" or "large"
+        spot     = request.form["spot"].strip()   # e.g. "S1", "M5", "B12"
+        duration = request.form["duration"]       # "monthly" or "yearly"
+        name     = request.form["name"].strip()
+        phone    = request.form["phone"].strip()
+        plate    = request.form["plate"].strip()
 
     # 2. Validate required fields
         if not (name and phone and plate):
             return "Missing required fields", 400
 
-    # 3. Connect to the database
+    # 3. Validate spot is in the correct pool (or fallback to next tier)
+        valid_pool = SPOT_POOLS[size].copy()
+        if spot not in valid_pool:
+            if size == "small":
+                valid_pool += SPOT_POOLS["medium"]
+            elif size == "medium":
+                valid_pool += SPOT_POOLS["large"]
+        if spot not in valid_pool:
+            return "Invalid spot selection", 400
+
+    # 4. Reserve in DB with a 24-hour hold
         conn = connect_db()
         c = conn.cursor()
 
-        now = datetime.now()
+        # 4a. Check it’s still available
+        c.execute("SELECT status FROM spots WHERE id = ?", (spot,))
+        row = c.fetchone()
+        if not row or row[0] != "available":
+            conn.close()
+            return "Spot no longer available", 400
+
+        now     = datetime.now()
         release = now + timedelta(hours=24)
 
-    # 4. Update spot as temporarily reserved
-        c.execute("UPDATE spots SET status = 'reserved', assigned_to = ?, reserved_at = ?, release_at = ? WHERE id = ?", 
-                    (name, now, release, spot))
+        # 4b. Mark as temporarily reserved for 24h
+        c.execute("""
+            UPDATE spots
+               SET status      = 'reserved',
+                   assigned_to = ?,
+                   reserved_at = ?,
+                   release_at  = ?
+             WHERE id = ?
+        """, (name, now, release, spot))
 
-    # 5. Save user reservation
-        c.execute('''INSERT INTO users 
-            (name, phone, plate, vehicle, spot, duration, submitted_at, release_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-            (name, phone, plate, vehicle, spot, duration, now, release))
+        # 5. Save the user reservation
+        c.execute("""
+            INSERT INTO users
+                (name, phone, plate, vehicle, spot, duration, submitted_at, release_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (name, phone, plate, size, spot, duration, now, release))
 
         conn.commit()
         conn.close()
 
-    # 6. Redirect to the correct PayPal link
-        key = (vehicle, duration)
-        paypal_url = PAYPAL_LINKS.get(key)
-
+        # 6. Redirect to PayPal
+        paypal_url = PAYPAL_LINKS.get((size, duration))
         if not paypal_url:
-            return "Invalid selection", 400
+            return "Payment link not configured", 500
 
         return redirect(paypal_url)
 
-        
+    # GET: render the form
     lang = session.get("lang", "el")
-    return render_template("index.html", lang=lang)
+    unavailable = _get_unavailable_spots()  # or inline your query here
+    return render_template("index.html", lang=lang, unavailable_spots=unavailable)
 
 @app.route("/admin")
 def admin():
