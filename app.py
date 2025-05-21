@@ -2,19 +2,28 @@ from dotenv import load_dotenv
 load_dotenv()
 import sqlite3
 from datetime import datetime, timedelta
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, session
+#from flask import Markup  # Optional for injecting HTML snippets
+import os
+
+app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback-secret")
+
+def login_required(f):
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        if not session.get("admin_logged_in"):
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return wrapped
+
 
 DB_PATH = "db/parking.db"
 
 def connect_db():
     return sqlite3.connect(DB_PATH)
 
-from flask import Flask, render_template, request, redirect, url_for, session
-#from flask import Markup  # Optional for injecting HTML snippets
-from datetime import datetime
-import os
-
-app = Flask(__name__)
-app.secret_key = "mysecretkey"  # Needed for sessions
 
 PRICES = {
     ("small","monthly"): 35,  ("small","yearly"): 378,
@@ -68,7 +77,24 @@ def _get_unavailable_spots():
     conn.close()
     return rows
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        if (username == os.getenv("ADMIN_USERNAME")
+            and password == os.getenv("ADMIN_PASSWORD")):
+            session["admin_logged_in"] = True
+            return redirect(url_for("admin"))
+        flash("Invalid credentials", "error")
+        return redirect(url_for("login"))
+    return render_template("login.html")
 
+@app.route("/logout")
+def logout():
+    session.pop("admin_logged_in", None)
+    return redirect(url_for("login"))
+    
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
@@ -141,12 +167,9 @@ def home():
     return render_template("index.html", lang=lang, unavailable_spots=unavailable)
 
 @app.route("/admin")
+@login_required
 def admin():
-    if not session.get("admin_logged_in"):
-        return redirect(url_for("login"))
-
     cleanup_expired_reservations()
-
     conn = connect_db()
     c = conn.cursor()
 
@@ -303,26 +326,6 @@ def change_language(lang_code):
     return redirect("/")
 
 from flask import flash
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        if (username == os.getenv("ADMIN_USERNAME")
-            and password == os.getenv("ADMIN_PASSWORD")):
-            session["admin_logged_in"] = True
-            return redirect(url_for("admin"))
-        flash("Invalid credentials", "error")
-        return redirect(url_for("login"))
-    return render_template("login.html")
-
-
-@app.route("/logout")
-def logout():
-    session.pop("admin_logged_in", None)
-    return redirect(url_for("login"))
-
 
 def cleanup_expired_reservations():
     now = datetime.now()
