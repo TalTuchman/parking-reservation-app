@@ -56,6 +56,18 @@ def price_sql_case(alias=""):
       END {alias}
     """
 
+def _get_unavailable_spots():
+    """
+    Return a list of spot IDs (strings) whose status is NOT 'available'.
+    Used by the index GET to filter out full spots.
+    """
+    conn = connect_db()
+    c = conn.cursor()
+    c.execute("SELECT id FROM spots WHERE status != 'available'")
+    rows = [row[0] for row in c.fetchall()]
+    conn.close()
+    return rows
+
 
 @app.route("/", methods=["GET", "POST"])
 def home():
