@@ -37,6 +37,25 @@ SPOT_POOLS = {
     "large" : [f"B{i}" for i in range(1,24)],
 }
 
+# ─── after your PRICES, PAYPAL_LINKS, SPOT_POOLS dicts ───
+
+def price_sql_case(alias=""):
+    """
+    Returns a SQL CASE expression mapping size+duration → price.
+    If you pass alias="income", you’ll get "... END AS income".
+    """
+    return f"""
+      CASE
+        WHEN duration = 'monthly' AND vehicle = 'small'  THEN {PRICES[('small','monthly')]}
+        WHEN duration = 'yearly'  AND vehicle = 'small'  THEN {PRICES[('small','yearly')]}
+        WHEN duration = 'monthly' AND vehicle = 'medium' THEN {PRICES[('medium','monthly')]}
+        WHEN duration = 'yearly'  AND vehicle = 'medium' THEN {PRICES[('medium','yearly')]}
+        WHEN duration = 'monthly' AND vehicle = 'large'  THEN {PRICES[('large','monthly')]}
+        WHEN duration = 'yearly'  AND vehicle = 'large'  THEN {PRICES[('large','yearly')]}
+        ELSE 0
+      END {alias}
+    """
+
 
 @app.route("/", methods=["GET", "POST"])
 def home():
