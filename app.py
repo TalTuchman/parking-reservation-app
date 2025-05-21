@@ -267,33 +267,35 @@ def confirm_payment(user_id):
     conn.close()
     return redirect(url_for("admin"))
 
-@app.route("/release/<int:spot_id>", methods=["POST"])
+@app.route("/release/<spot_id>", methods=["POST"])
 def release_spot(spot_id):
+    """
+    spot_id is now a string like "S1", "M5", etc.
+    """
     conn = connect_db()
     c = conn.cursor()
 
     # Free the spot
     c.execute("""
         UPDATE spots 
-        SET status = 'available', 
+        SET status = 'available',
             assigned_to = NULL, 
             reserved_at = NULL, 
             release_at = NULL 
         WHERE id = ?
     """, (spot_id,))
-    
-    # 2. Delete or deactivate the user who reserved it
+
+    # Remove any confirmed user for that spot
     c.execute("""
         DELETE FROM users 
-        WHERE spot = ? AND confirmed = 1
+        WHERE spot = ? 
+          AND confirmed = 1
     """, (spot_id,))
-
-    # Optionally update users table (not mandatory unless you want to show it)
-    c.execute("UPDATE users SET release_at = datetime('now') WHERE spot = ? AND confirmed = 1", (spot_id,))
 
     conn.commit()
     conn.close()
     return redirect(url_for("admin"))
+
 
 @app.route("/lang/<lang_code>")
 def change_language(lang_code):
