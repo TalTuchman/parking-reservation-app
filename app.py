@@ -296,7 +296,6 @@ def release_spot(spot_id):
     conn.close()
     return redirect(url_for("admin"))
 
-
 @app.route("/lang/<lang_code>")
 def change_language(lang_code):
     if lang_code in ["el", "en"]:
@@ -310,15 +309,14 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-
-        if username == os.getenv("ADMIN_USERNAME") and password == os.getenv("ADMIN_PASSWORD"):
+        if (username == os.getenv("ADMIN_USERNAME")
+            and password == os.getenv("ADMIN_PASSWORD")):
             session["admin_logged_in"] = True
             return redirect(url_for("admin"))
-        else:
-            flash("Invalid credentials", "error")
-            return redirect(url_for("login"))
-
+        flash("Invalid credentials", "error")
+        return redirect(url_for("login"))
     return render_template("login.html")
+
 
 @app.route("/logout")
 def logout():
