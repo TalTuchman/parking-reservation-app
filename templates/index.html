@@ -20,7 +20,7 @@
 
     <!-- Image -->
     <div class="mt-4">
-      <img src="{{ url_for('static', filename='lot2.png') }}" alt="Parking Layout" class="w-full rounded border">
+      <img src="{{ url_for('static', filename='Lot_new.png') }}" alt="Parking Layout" class="w-full rounded border">
     </div>
 
     <!-- Reservation Form -->
@@ -91,7 +91,7 @@
       large : Array.from({length:23},(_,i)=>`B${i+1}`)
     };
 
-    const unavailableSpots = {{ unavailable_spots | tojson }};
+    const unavailableSpots = JSON.parse('{{ unavailable_spots | tojson | safe }}');
 
     function updateSpots() {
       const size = document.getElementById('size').value;
